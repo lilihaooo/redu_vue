@@ -1,0 +1,14 @@
+:root {
+    --bg-color: #a91e1e;
+    --color: black;
+}
+
+/*暗黑模式*/
+html.dark {
+    --bg-color: #2b6cad;
+    --color: white;
+}
+
+
+
+
