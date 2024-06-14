@@ -53,7 +53,7 @@
 
 import {useRoute, useRouter} from 'vue-router';
 import imgurl from '../assets/img/img.jpg';
-import {kw} from '../utils/global/global'
+import {kw} from '../global/global'
 import {ref} from "vue";
 
 const searchInput = ref('')

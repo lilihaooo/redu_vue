@@ -3,8 +3,9 @@
   <el-tabs  v-model="tab_name"   @tab-click="handleClick" style="margin-left: 10px">
     <el-tab-pane label="首页" name="index"></el-tab-pane>
     <el-tab-pane label="达人选品" name="warehouse"> </el-tab-pane>
-    <el-tab-pane label="秒杀" name="seckill"> </el-tab-pane>
-    <el-tab-pane label="订单" name="order"> </el-tab-pane>
+    <el-tab-pane label="秒杀活动管理" name="seckill_activity"> </el-tab-pane>
+    <el-tab-pane label="今日秒杀" name="seckill"> </el-tab-pane>
+    <el-tab-pane label="订单管理" name="order"> </el-tab-pane>
   </el-tabs>
   </div>
 </template>
@@ -14,7 +15,7 @@
 import type { TabsPaneContext } from 'element-plus'
 import {useRoute, useRouter} from "vue-router";
 import {ref, watch} from "vue";
-import {kw} from "../utils/global/global";
+import {kw} from "../global/global";
 const route = useRoute();
 const router = useRouter();
 const handleClick = (tab: TabsPaneContext, event: Event) => {

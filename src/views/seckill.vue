@@ -1,28 +1,14 @@
 <script setup lang="ts">
-import { reactive, ref} from 'vue'
-import {GetSeckillList} from "../api/seckill";
+import {DeleteSeckillActivity, DoSeckill, GetSeckillActivityList, GetTodaySeckillActivityList} from "../api/seckill";
+import {onMounted, ref} from "vue";
+import {ElMessage} from "element-plus";
 
-const formLabelWidth = '140px'
-const dialogFormVisible = ref(false)
-const form = ref({}as SeckillActivityForm)
-
-const dataTimeVale = ref( '' )
-
-interface SeckillActivityForm {
-  title: string
-  product_id: number
-  status: string
-  count: number
-  unit_price: number
-  begin_time: string
-  end_time:string
-  allow_user_grade: string
-}
 
 interface SeckillActivity {
   id: number
   title: string
   product_id: number
+  product_name: string
   status: string
   count: number
   unit_price: number
@@ -31,26 +17,14 @@ interface SeckillActivity {
   allow_user_grade: string
 }
 
-const tableData = ref([
-  {
-    id: 1,
-    title: '手机秒杀',
-    product_id: 1221,
-    status: '未开始',
-    count: 10,
-    unit_price: 999.99,
-    begin_time: '2016-05-03',
-    end_time: '2016-05-03',
-    allow_user_grade: '3',
-  },
-] as SeckillActivity[])
+const NotStart = ref<SeckillActivity[]>([] as SeckillActivity[])
+const InProgress = ref<SeckillActivity[]>([] as SeckillActivity[])
+const End = ref<SeckillActivity[]>([] as SeckillActivity[])
 
-
-function getSeckillActivityList(data:SeckillActivityForm) {
-  // 生成任务号
-  GetSeckillList(data).then(res => {
+function getTodaySeckillActivityList(data: any) {
+  GetTodaySeckillActivityList(null).then(res => {
     if (res.data.code == 2000) {
-      tableData.value = res.data.data
+      categorizeActivities(res.data.data)
       return
     } else {
       console.log(res.data.msg)
@@ -59,91 +33,86 @@ function getSeckillActivityList(data:SeckillActivityForm) {
   })
 }
 
-const handleDelete = (index: number, row: SeckillActivity) => {
-  console.log(index, row)
+function categorizeActivities(activities: SeckillActivity[]) {
+  const currentTime = new Date().getTime()
+  console.log(currentTime)
+
+  activities.forEach(activity => {
+    const beginTime = new Date(activity.begin_time).getTime()
+    const endTime = new Date(activity.end_time).getTime()
+    if (currentTime < beginTime) {
+      NotStart.value.push(activity)
+    } else if (currentTime >= beginTime && currentTime <= endTime) {
+      InProgress.value.push(activity)
+    } else {
+      End.value.push(activity)
+    }
+  })
+}
+
+onMounted(() => {
+  getTodaySeckillActivityList(null)
+});
+
+const handleDoSeckill = (id: number) => {
+  DoSeckill(id).then(res => {
+    if (res.data.code == 2000) {
+      successMsg(res.data.msg)
+    } else {
+      errorMsg(res.data.msg)
+      return
+    }
+  })
+}
+
+const errorMsg = (msg: string) => {
+  ElMessage.error(msg)
+}
+
+const successMsg = (msg: string) => {
+  ElMessage.success(msg)
 }
 
 
-const commitForm = (data: SeckillActivityForm) => {
-  data.begin_time = dataTimeVale.value[0].toString()
-  data.end_time = dataTimeVale.value[1].toString()
 
-  getSeckillActivityList(data)
-}
 </script>
 
+
 <template>
-  <el-button plain  @click="dialogFormVisible = true">
-    创建
-  </el-button>
-
-  <el-table :data="tableData" style="width: 100%; margin-top: 40px">
-    <el-table-column prop="title" label="活动标题" width="300" />
-    <el-table-column prop="product_id" label="商品id" width="180" />
-    <el-table-column prop="status" label="状态" width="180" />
-    <el-table-column prop="count" label="数量" width="180" />
-    <el-table-column prop="unit_price" label="单价" width="180" />
-    <el-table-column prop="begin_time" label="开始时间" width="180" />
-    <el-table-column prop="end_time" label="结束时间" width="180" />
-    <el-table-column prop="allow_user_grade" label="允许参与用户等级" width="200" />
-
-    <el-table-column fixed="right" width="120">
-      <template #default="scope">
-        <el-button
-            size="small"
-            type="danger"
-            @click="handleDelete(scope.$index, scope.row)"
-        >
-          删除
-        </el-button>
-      </template>
-    </el-table-column>
-  </el-table>
-
-
-
-  <el-dialog v-model="dialogFormVisible"  width="80%">
-    <el-form :model="form">
-      <el-form-item label="活动名称" :label-width="formLabelWidth" >
-        <el-input v-model="form.title" style="width: 400px" />
-      </el-form-item>
-      <el-form-item label="商品id" :label-width="formLabelWidth">
-        <el-input type="number" v-model="form.product_id" style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="数量" :label-width="formLabelWidth">
-        <el-input type="number" v-model="form.count" style="width: 240px"  />
-      </el-form-item>
-      <el-form-item label="单价" :label-width="formLabelWidth">
-        <el-input type="number" v-model="form.unit_price" style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="开始时间" :label-width="formLabelWidth">
-          <div class="block">
-            <el-date-picker
-                v-model="dataTimeVale"
-                type="datetimerange"
-                start-placeholder="Start date"
-                end-placeholder="End date"
-                format="YYYY-MM-DD HH:mm:ss"
-                date-format="YYYY/MM/DD ddd"
-                time-format="A hh:mm:ss"
-            />
+  <table style="width: 100%">
+    <tr>
+      <td style="width: 20%">
+        <el-card style=" height: 560px">
+          <div style="color: #0745cb">即将开始!</div>
+          <el-divider />
+          <div style="margin-top: 12px" v-for="activity in NotStart" :key="activity.id">
+            <el-button disabled>{{activity.title}}</el-button>
           </div>
-      </el-form-item>
-      <el-form-item label="允许参与用户等级" :label-width="formLabelWidth">
-        <el-input v-model="form.allow_user_grade" style="width: 240px" />
-      </el-form-item>
 
-
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button type="primary" @click="commitForm(form)">
-          提交
-        </el-button>
-      </div>
-    </template>
-  </el-dialog>
+        </el-card>
+      </td>
+      <td style="width: 60%;">
+        <el-card style=" height: 560px">
+          <div style="color: green">正在秒杀...</div>
+          <el-divider />
+          <div style="margin-top: 12px" v-for="activity in InProgress" :key="activity.id">
+            <el-button @click="handleDoSeckill(activity.id)">{{activity.title}}</el-button>
+          </div>
+        </el-card>
+      </td>
+      <td style="width: 20%;">
+        <el-card style=" height: 560px">
+          <div style="color: red">秒杀结束!</div>
+          <el-divider />
+          <div style="margin-top: 12px" v-for="activity in End" :key="activity.id">
+            <el-button disabled>{{activity.title}}</el-button>
+          </div>
+        </el-card>
+      </td>
+    </tr>
+  </table>
 </template>
+
 
 <style scoped>
 

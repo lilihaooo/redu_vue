@@ -5,7 +5,7 @@ import vFooter from '../components/footer.vue';
 import {GetProductList} from "../api/product";
 import {Picture as IconPicture} from '@element-plus/icons-vue'
 import {useRoute} from "vue-router";
-import {kw} from "../utils/global/global";
+import {kw} from "../global/global";
 
 
 

@@ -31,6 +31,15 @@ const routes: RouteRecordRaw[] = [
                 component: () => import(/* webpackChunkName: "dashboard" */ '../views/warehouse.vue'),
             },
             {
+                path: '/seckill_activity',
+                name: 'seckill_activity',
+                meta: {
+                    title: '秒杀',
+                    permiss: '1',
+                },
+                component: () => import(/* webpackChunkName: "dashboard" */ '../views/seckill_activity.vue'),
+            },
+            {
                 path: '/seckill',
                 name: 'seckill',
                 meta: {
